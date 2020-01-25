@@ -69,7 +69,7 @@ Caleb Lehman
 
 Let $N = 26$, $S = 1 + \ldots + 26 = N(N+1) / 2 = 351$.
 For any message $m \in \ptexts$,
-there is a unique key $k \in \keys$ such that $c = (m + k) \bmod N$,
+there is a unique key $k \in \keys$ such that $0 = \enc_k(m) = (m + k) \bmod N$,
 namely $k = (-m) \bmod N$.
 It follows that
 \begin{equation*}
@@ -94,13 +94,14 @@ Finally, substituting the value $N = 26$, we have $\prob[\ctext = 0] = 277 / 947
 \section*{Problem 2}
 
 \begin{claim}\label{claim:shift-cipher-property}
-Consider any $(m, c)$ pair encrypted with a shift cipher,
+Consider any message/ciphertext pair produced with a shift cipher,
 that is,
 any message $m = m_0 \cdots m_n$,
 ciphertext $c = c_0 \cdots c_n$,
 and pair $(k, N)$
 such that $c_i = (m_i + k) \bmod N$ for $i = 0, \ldots, n$.
-Then $c_i - c_j \equiv m_i - m_j \mod N$.
+Then $c_i - c_j \equiv m_i - m_j \mod N$
+for all $i, j \in \set{ 0, \ldots, n }$.
 \end{claim}
 \begin{proof}
 Simply observe that $c_i - c_j \equiv (m_i - k) - (m_j - k) \equiv m_i - m_j \mod N$.
@@ -142,54 +143,48 @@ For all of the following, we assume keys are generated uniformly.
 \subsection*{Period 2}
 
 Each Vigen\`ere cipher of period 2 corresponds to a key pair $k = (k_0, k_1)$,
-where the subsequence $m_im_{i+2}\ldots$
+where the subsequence $m_im_{i+2}\cdots$
 is encrypted using the Caesar shift cipher with key $k_i$.
 It is clear that applying the cipher corresponding to $k = (k_0, k_1)$
 and then applying the cipher corresponding to $k' = (k'_0, k'_1)$
 is equivalent to just applying the cipher $k' \circ k := (k'_0 + k_0, k'_1 + k_1)$.
-Furthermore, the keys $\chi = (1, 3)$ and $\chi' = (25, 23)$
+Furthermore, the keys $\chi = (25, 23)$ and $\chi' = (1, 3)$
 encrypt \texttt{abcd} and \texttt{bedg} as each other, that is
 \begin{gather*}
-    \enc_{\chi}(\texttt{abcd}) = \texttt{bedg}\\
-    \enc_{\chi'}(\texttt{bedg}) = \texttt{abcd}
+    \enc_{\chi}(\texttt{bedg}) = \texttt{abcd}\\
+    \enc_{\chi'}(\texttt{abcd}) = \texttt{bedg}
 \end{gather*}
-Combining these results, we can prove the following claim:
+Combining these results, we can prove the desired claim:
 \begin{claim}\label{claim:period-2-secure}
 Assuming Bob uses a Vigen\`ere cipher of period 2,
 Eve cannot determine Bob's password from the resulting ciphertext.
 In particular, this particular encryption scheme is perfectly secret.
 \end{claim}
 \begin{proof}
-Consider any ciphertext $c \in \ctexts$.
-If there is no key $k$ such that $c = Enc_k(\texttt{abcd})$,
-then $\prob[\ctext = c \given \ptext = \texttt{abcd}] = 0 \leq \prob[\ctext = c \given \ptext = \texttt{bedg}]$.
-If there is some key $k$ such that $c = Enc_k(\texttt{abcd})$,
-then $c = Enc_k(Enc_{\chi'}(\texttt{bedg})) = Enc_{k \circ \chi'}(\texttt{bedg})$.
-Since $k \circ \chi'$ and $k$ are equally likely to be generated as keys for the cipher,
-we have $\prob[\ctext = c \given \ptext = \texttt{abcd}] \leq \prob[\ctext = c \given \ptext = \texttt{bedg}]$.
-In summary, for all $c \in \ctexts$,
-\begin{equation*}
-    \prob[\ctext = c \given \ptext = \texttt{abcd}] \leq \prob[\ctext = c \given \ptext = \texttt{bedg}]
-\end{equation*}
-
-In the other direction, consider any ciphertext $c \in \ctexts$.
-If there is no key $k$ such that $c = Enc_k(\texttt{bedg})$,
-then $\prob[\ctext = c \given \ptext = \texttt{bedg}] = 0 \leq \prob[\ctext = c \given \ptext = \texttt{abcd}]$.
-If there is some key $k$ such that $c = Enc_k(\texttt{bedg})$,
-then $c = Enc_k(Enc_{\chi}(\texttt{abcd})) = Enc_{k \circ \chi}(\texttt{abcd})$.
-Since $k \circ \chi$ and $k$ are equally likely to be generated as keys for the cipher,
-we have $\prob[\ctext = c \given \ptext = \texttt{bedg}] \leq \prob[\ctext = c \given \ptext = \texttt{abcd}]$.
-In summary, for all $c \in \ctexts$,
-\begin{equation*}
-    \prob[\ctext = c \given \ptext = \texttt{bedg}] \leq \prob[\ctext = c \given \ptext = \texttt{abcd}]
-\end{equation*}
+Since all keys are equally likely,
+we have $\prob[\key = k] = \prob[\key = k \circ \chi]$ for all $k \in \keys$.
+It follows that
+\begin{align*}
+    \prob[\ctext = c \given \ptext = \texttt{abcd}]
+        &= \sum_{k \in \keys}{ \prob[\key = k]\prob[\enc_{k}(\texttt{abcd}) = c] }\\
+        &= \sum_{k \in \keys}{ \prob[\key = k]\prob[\enc_{k \circ \chi}(\texttt{bedg}) = c] }\\
+        &= \sum_{k \in \keys}{ \prob[\key = k \circ \chi]\prob[\enc_{k \circ \chi}(\texttt{bedg}) = c] }
+\end{align*}
+Since $f:\keys \to \keys:k \mapsto k \circ \chi$ is a bijection on $\keys$
+(with inverse explicitly given by $f':\keys \to \keys: k \mapsto k \circ \chi'$),
+we have
+\begin{align*}
+    \sum_{k \in \keys}{ \prob[\key = k \circ \chi]\prob[\enc_{k \circ \chi}(\texttt{bedg}) = c] }
+        &= \sum_{k \in \keys}{ \prob[\key = k]\prob[\enc_{k}(\texttt{bedg}) = c] }\\
+        &= \prob[\ctext = c \given \ptext = \texttt{bedg}]
+\end{align*}
 We conclude that
 \begin{equation*}
     \prob[\ctext = c \given \ptext = \texttt{abcd}] = \prob[\ctext = c \given \ptext = \texttt{bedg}]
 \end{equation*}
 for every ciphertext $c \in C$,
-regardless of the probability distribution over $\ptexts$,
-so the scheme is perfectly secret.
+regardless of the probability distribution over $\ptexts = \set{ \texttt{abcd}, \texttt{bedg} }$.
+This result is equivalent to perfect secrecy (Lemma (2.4) in the textbook).
 \end{proof}
 
 \subsection*{Period 3}
@@ -225,18 +220,18 @@ It follows that Eve can use the following procedure to determine Bob's password:
 \subsection*{Period 4}
 
 Each Vigen\`ere cipher of period 4 corresponds to a key pair $k = (k_0, k_1, k_2, k_3)$,
-where the subsequence $m_im_{i+4}\ldots$
+where the subsequence $m_im_{i+4}\cdots$
 is encrypted using the Caesar shift cipher with key $k_i$.
 Similarly to the case with period 2, appying the cipher with key $k$
 and then applying the cipher with key $k'$
 is equivalent to just applying the cipher $k' \circ k$
 composed of the sums of the individual shift cipher keys.
-Similarly to the case with period 2, note that the keys
-$\chi = (1, 3, 1, 3)$ and $\chi' = (25, 23, 25, 23)$
+Furthermor, note that the keys
+$\chi = (25, 23, 25, 23)$ and $\chi' = (1, 3, 1, 3)$
 encrypt \texttt{abcd} and \texttt{bedg} as each other, that is
 \begin{gather*}
-    \enc_{\chi}(\texttt{abcd}) = \texttt{bedg}\\
-    \enc_{\chi'}(\texttt{bedg}) = \texttt{abcd}
+    \enc_{\chi}(\texttt{bedg}) = \texttt{abcd}\\
+    \enc_{\chi'}(\texttt{abcd}) = \texttt{bedg}
 \end{gather*}
 Combining these results, we can prove the following claim:
 \begin{claim}\label{claim:period-4-secure}
@@ -254,7 +249,7 @@ except $\chi$ and $\chi'$ now refer to the 4-tuples above.
 
 The resulting scheme may be an improvement in some sense,
 since you are no longer distributing the message in human-readable plaintext.
-For the purposes of this class, however,
+However, from the standpoint of cryptographic secrecy,
 the resulting scheme is not an improvement.
 In particular, it is no longer perfectly secret:
 \begin{claim}
@@ -269,25 +264,29 @@ This follows immediately from textbook Theorem~(\ref{booktheorem:key-space-size}
 since $|\keys| = 2^n - 1 < 2^n = |\ptexts|$.
 
 The result can also easily be proved directly.
-Consider the message $m = 0^n$ and the ciphertext $c = 0^n$.
+Take the uniform distribution on $\ptexts$
+and consider the message $m_0 = 0^n$ and the ciphertext $c_0 = 0^n$.
 Then
 \begin{align*}
-    \prob[\ctext = c]
-        &= \sum_{m' \in \ptexts, k \in \keys}{ \prob[\ptext = m' \wedge \key = k \wedge 0^n = m' \oplus k] }\\
-        &= \sum_{m' \neq m}{ \prob[\ptext = m'] \cdot \prob[\key = m'] }\\
-        &> 0
+    \prob[\ctext = c_0]
+        &= \sum_{m \in \ptexts, k \in \keys}{ \prob[\ptext = m \wedge \key = k \wedge c = 0^n = m \oplus k] }\\
+        &= \sum_{m \in \ptexts}{ \prob[\ptext = m] \cdot \prob[\key = m] }\\
+        &= \prob[\ptext = 0^n]\cdot \prob[\key = 0^n] + \sum_{m \neq 0^n}{ \frac{1}{2^n} \cdot \frac{1}{2^n - 1} }\\
+        &= 0 + 2^n (\frac{1}{2^n} \cdot \frac{1}{2^n - 1})\\
+        &= \frac{1}{2^n - 1}\\
+        &> 0,
 \end{align*}
-but
+but,
 \begin{equation*}
-    \prob[\ptext = m \given \ctext = c] = \prob[\ptext = 0^n \given \ctext = 0^n] = 0,
+    \prob[\ptext = m_0 \given \ctext = c_0] = \prob[\ptext = 0^n \given \ctext = 0^n] = 0,
 \end{equation*}
-since the only key which encrpyts $m$ to $c$ is $k = 0^n \not\in \keys$.
-Hence, we have found a message $m \in \ptexts$
-and a ciphertext $c \in \ctexts$
-such that $\prob[C = c] > 0$
+since the only key which encrpyts $m_0$ to $c_0$ is $k = 0^n \not\in \keys$.
+Hence, we have found a message $m_0 \in \ptexts$
+and a ciphertext $c_0 \in \ctexts$
+such that $\prob[\ctext = c_0] > 0$
 and
 \begin{equation*}
-    \prob[\ptext = m \given \ctext = c] \neq \prob[\ptext = m],
+    \prob[\ptext = m_0 \given \ctext = c_0] = 0 < \frac{1}{2^n} = \prob[\ptext = m_0],
 \end{equation*}
 so $\Pi$ is not perfectly secure.
 \end{proof}
@@ -301,38 +300,21 @@ so $\Pi$ is not perfectly secure.
     \end{equation*}
     It is more likely that we would encode these keys by the result of applying each function to the string $ab\cdots z$,
     that is,
-    \begin{equation*}
-        \keys = \set{ \text{permutations of the string } ab\cdots z }
-    \end{equation*}
+    \begin{align*}
+        \keys 
+            &= \set{ f(ab\cdots z) \mid f:\set{a, \ldots, z} \to \set{a, \ldots, z} \text{ a bijection} }\\
+            &= \set{ \text{permutations of the string } ab\cdots z }
+    \end{align*}
     Note that $|\keys| = 26!$.
     
     \item[b)] We first make some observations about message spaces
     for which the mono-alphabetic substitution cipher is perfectly secure
     and collect some theorems:
-    \begin{claim}
-    Let $\ptexts$ be a message space
-    for which the mono-alphabetic substitution cipher is perfectly secure.
-    Then all messages in $\ptexts$ are of the same length.
-    \end{claim}
-    \begin{proof}
-    By way of contradiction, suppose $m, m' \in \ptexts$ and $|m| \neq |m'|$.
-    Then $m \in \ctexts$ is valid ciphertext
-    (corresponding to encrypting $m$ with the identity function on $\set{ a, \ldots, z }$).
-    However, since the mono-alphabetic substitution cipher preserves length
-    and $|m| \neq |m'|$,
-    $\enc_k(m')$ cannot output $m$,
-    so
-    \begin{equation*}
-        \prob[\ptext = m' \given \ctext = m] = 0 < \prob[\ptext = m'],
-    \end{equation*}
-    It follows that the scheme is not perfectly secure, contradicting the hypothesis.
-    Hence, all messages in $\ptexts$ must have the same length.
-    \end{proof}
     \begin{booktheorem}{2.10}\label{booktheorem:key-space-size}
     If $(\gen, \enc, \dec)$ is a perfectly secret encryption scheme with message space
     $\ptexts$ and key space $\keys$, then $|\keys| \geq |\ptexts|$.
     \end{booktheorem}
-    \begin{claim}
+    \begin{claim}\label{claim:max-message-space}
     Let $\ptexts$ be a message space
     for which the mono-alphabetic substitution cipher is perfectly secure.
     Then $|\ptexts| \leq 26!$.
@@ -351,17 +333,22 @@ so $\Pi$ is not perfectly secure.
     there is a unique key $k \in \keys$
     such that $\enc_k(m)$ outputs $c$.
     \end{booktheorem}
+    We can now describe a maximal message space $\ptexts \subseteq \set{ a, \ldots, z }^*$
+    for which the mono-alphabetic substitution cipher provides perfect secrecy:
     \begin{claim}
     The mono-alphabetic substitution cipher is perfectly secure for the message space
     \begin{equation*}
-        \ptexts_1 = \set{ \text{permutations of the string } ab\cdots z }
+        \ptexts = \set{ \text{permutations of the string } ab\cdots z }
     \end{equation*}
+    and this message space is a large a possible while maintaining that property.
     \end{claim}
     \begin{proof}
-    We have $\ptexts_1 = \ctexts = \keys = \set{ \text{permutations of the string } ab\cdots z}$.
-    In particular, $|\ptexts_1| = |\ctexts| = |\keys| = 26!$
+    We have $\ptexts = \ctexts = \keys = \set{ \text{permutations of the string } ab\cdots z}$.
+    In particular, $|\ptexts| = |\ctexts| = |\keys| = 26!$
     and (by hypothesis) each key is equally likely to be generated.
-    Now consider any two permutations $\pi, \pi'$
+    Now consider any $\pi \in \ptexts$ and $\pi' \in \ctexts$,
+    that is,
+    any two permutations $\pi, \pi'$
     of the string $ab\cdots z$.
     Given any character $\sigma \in \set{ a, \ldots, z }$,
     there is a unique index $i_{\pi}(\sigma)$
@@ -371,52 +358,25 @@ so $\Pi$ is not perfectly secure.
         f : \set{a,\ldots,z} \to \set{a,\ldots,z}
           : \sigma \mapsto i_{\pi}(\sigma)\text{th character of }\pi'
     \end{equation*}
-    is uniquely defined.
+    is uniquely defined
+    (in words, write the two permutations on top of one another and read the substitution from top to bottom).
     Then the string $k = f(a)f(b)\cdots f(z)$
     is a permutation of the string $ab\cdots z$
     and is the unique key such that $\enc_k(\pi) = \pi'$.
     The conditions of Shannon's theorem are satisfied,
     so the mono-alphabetic substitution cipher is perfectly secure for this message space.
+    Since $|\ptexts| = 26!$, Claim~(\ref{claim:max-message-space}) gives us
+    that this space is maximal while still maintaining perfect secrecy.
     \end{proof}
-    \begin{claim}
-    The mono-alphabetic substitution cipher is perfectly secure for the message space
-    \begin{align*}
-        \ptexts_2
-            &= \set{ \omega \mid \text{one of } a\omega, b\omega, \ldots, z\omega \text{ is a permutation of } ab\cdots z }\\
-            &= \set{ \text{permutations of } ab\cdots z \text{ missing exactly one character} }
-    \end{align*}
-    \end{claim}
-    \begin{proof}
-    To construct a ``permutation missing exactly one character,''
-    there are $26$ choices for the missing character,
-    and $25!$ ways to permute the remaining characters.
-    In particular, $\ctexts = \ptexts_2$
-    and $|\ctexts| = |\ptexts_2| = 26 \cdot 25! = 26! = |\keys|$.
-    The remainder of the proof is similar to the proof above.
-    In particular, any $\pi, \pi' \in \ptexts_2$ uniquely determine
-    a key $k$ such that $\enc_k(\pi) = \pi'$
-    (the unique missing character in $\pi'$
-    substitutes for the unique missing character in $\pi$
-    and the other substitutions are determined as in the proof above).
-    So the conditions of Shannon's theorem are satisfied,
-    from which it follows that
-    the mono-alphabetic substitution cipher is perfectly secure for this message space.
-    \end{proof}
-    
-    Now we can prove our full result:
-    \begin{claim}
-    The largest message spaces
-    for which the mono-alphabetic substitution cipher is perfectly secure
-    are
-    \begin{gather*}
-        \ptexts_1 = \set{ \text{permutations of the string } ab\cdots z }\\
-        \ptexts_2 = \set{ \omega \mid \text{one of } a\omega, b\omega, \ldots, z\omega \text{ is a permutation of } ab\cdots z }
-    \end{gather*}
-    \end{claim}
-    \begin{proof}
-    Suppose $\ptexts$ is a message space for which
-    the mono-alphabetic substitution cipher is perfectly secure.
-    TODO
-    \end{proof}
+
+    Finally, we note that the above message space is not the only maximally-sized message
+    space for which the mono-alphabetic substitution cipher is perfectly secure.
+    Indeed, by a similar argument, we can show that the maximally-sized message spaces
+    are precisely the spaces of the form
+    \begin{equation*}
+        \ptexts = \set{ f(\omega) \mid f :\set{ a, \ldots, z } \to \set{ a, \ldots, z } \text{ a bijection} },
+    \end{equation*}
+    where $\omega \in \set{ a, \ldots, z }^*$ is any word with exactly 25 or 26 \emph{distinct} characters
+    (allowing for any number of repetitions).
 \end{enumerate}
 \end{document}
