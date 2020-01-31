@@ -30,6 +30,7 @@
 \newcommand{\given}{\mid}
 
 %% Crypto commands
+\newcommand{\func}{\algo{Func}}
 \newcommand{\ctexts}{\mathcal{C}}
 \newcommand{\ctext}{\algo{C}}
 \newcommand{\ptexts}{\mathcal{M}}
@@ -67,6 +68,40 @@ Caleb Lehman
 \maketitle
 
 \section*{Problem 1}
+
+Let $G$ be any pseudorandom generator with expansion factor $l(n) = 2n$.
+\begin{claim}
+$F: \set{ 0, 1 }^n \times \set{ 0, 1 }^{2n} \to \set{ 0, 1 }^{2n} : (k, x) \mapsto G(k) \oplus x$ is not a pseudorandom function.
+\end{claim}
+\begin{proof}
+Let $\func_{2n}$ denote the set of all functions $f : \set{ 0, 1 }^{2n} \to \set{ 0, 1 }^{2n}$.
+Then
+\begin{align*}
+    \prob[D^{f(\cdot)}(1^n) = 1 : f \gets_u \func_{2n}]
+        &= \prob[f(0^{2n}) \oplus f(1^{2n}) = 1^{2n} : f \gets_u \func_{2n}]\\
+        &= \prob[f(0^{2n}) = 1^{2n} \oplus f(1^{2n}) : f \gets_u \func_{2n}]\\
+        &= \sum_{x \in \set{ 0, 1 }^{2n}} \prob[f(0^{2n}) = 1^{2n} \oplus x \land f(1^{2n}) = x : f \gets_u \func_{2n}]\\
+        &= \sum_{x \in \set{ 0, 1 }^{2n}} \frac{1}{2^{2n}} \cdot \frac{1}{2^{2n}}\\
+        &= \frac{1}{2^{2n}}
+\end{align*}
+Now define the distinguisher $D^{h(\cdot)}(\param^n)$
+which returns $1$ if $h(0^{2n}) \oplus h(1^{2n}) = 1^{2n}$,
+and returns $0$ otherwise.
+Then we have
+\begin{align*}
+    \prob[D^{F_k(\cdot)}(1^n) = 1 : k \gets_u \set{ 0, 1 }^n]
+        &= \prob[F_k(0^{2n}) \oplus F_k(1^{2n}) = 1^{2n} : k \gets_u \set{ 0, 1 }^n]\\
+        &= \prob[\left(G(k) \oplus 0^{2n}\right) \oplus \left(G(k) \oplus 1^{2n}\right) = 1^{2n} : k \gets_u \set{ 0, 1 }^n]\\
+        &= \prob[0^{2n} \oplus 1^{2n} = 1^{2n}] = 1
+\end{align*}
+Hence,
+\begin{align*}
+    |\prob[D^{F_k(\cdot)}(1^n) = 1 : k \gets_u \set{ 0, 1 }^n] - \prob[D^{f(\cdot)}(1^n) = 1 : f \gets_u \func_{2n}]|
+        &= 1 - \frac{1}{2^{2n}}
+\end{align*}
+The final expression is clearly not negligible (it doesn't even go to $0$ as $n \to \infty$, let alone faster than any polynomial),
+so $F$ is not a pseudorandom function.
+\end{proof}
 
 \textbf{TODO}
 
