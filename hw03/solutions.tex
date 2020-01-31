@@ -1,0 +1,81 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+
+%%% Packages
+% Math
+\usepackage{amsmath,amsfonts,amssymb,amsthm}
+\numberwithin{equation}{section}
+\theoremstyle{plain}
+\newtheorem{claim}{Claim}
+\newtheorem{corollary}{Corollary}
+\newtheorem{booktheoremX}{(Textbook) Theorem}
+\newenvironment{booktheorem}[1]{%
+\renewcommand\thebooktheoremX{#1}%
+\booktheoremX
+}{\endbooktheoremX}
+
+% Pseudo code
+%\usepackage{algorithm, algpseudocode}
+
+% I think this needs to be the last package
+\usepackage{hyperref}
+%%%
+
+%%% Commands
+%% General
+\newcommand{\set}[1]{\{ #1 \}}
+
+%% Probability commands
+\DeclareMathOperator*{\prob}{Pr}
+\newcommand{\given}{\mid}
+
+%% Crypto commands
+\newcommand{\ctexts}{\mathcal{C}}
+\newcommand{\ctext}{\algo{C}}
+\newcommand{\ptexts}{\mathcal{M}}
+\newcommand{\ptext}{\algo{M}}
+\newcommand{\keys}{\mathcal{K}}
+\newcommand{\key}{\algo{K}}
+\newcommand{\algo}[1]{\mathsf{#1}}
+\newcommand{\adv}{\mathcal{A}}
+\newcommand{\advv}{\mathcal{A}'}
+\DeclareMathOperator{\negl}{negl}
+% Private key
+\newcommand{\priv}{\Pi}
+\newcommand{\gen}{\algo{Gen}}
+\newcommand{\enc}{\algo{Enc}}
+\newcommand{\dec}{\algo{Dec}}
+\newcommand{\param}{1}
+\newcommand{\expir}[3]{\algo{PrivK}^{#1}_{{#2},{#3}}}
+\newcommand{\eav}{\algo{eav}}
+\newcommand{\cpa}{\algo{cpa}}
+%%%
+
+\title{%
+CSE 5351 Spring 2020\\
+Homework 3
+}
+\author{%
+Caleb Lehman
+(\href{mailto:lehman.346@osu.edu}{\texttt{lehman.346@osu.edu}})
+}
+\date{%
+}
+
+\begin{document}
+
+\maketitle
+
+\section*{Problem 1}
+
+\textbf{TODO}
+
+\section*{Problem 2}
+
+\textbf{TODO}
+
+\section*{Problem 3}
+
+\textbf{TODO}
+
+\end{document}
