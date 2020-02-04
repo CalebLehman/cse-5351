@@ -15,7 +15,7 @@
 }{\endbooktheoremX}
 
 % Pseudo code
-%\usepackage{algorithm, algpseudocode}
+\usepackage{algorithm, algpseudocode}
 
 % I think this needs to be the last package
 \usepackage{hyperref}
@@ -30,6 +30,7 @@
 \newcommand{\given}{\mid}
 
 %% Crypto commands
+\newcommand{\ppt}{\algo{PPT}}
 \newcommand{\func}{\algo{Func}}
 \newcommand{\ctexts}{\mathcal{C}}
 \newcommand{\ctext}{\algo{C}}
@@ -40,7 +41,7 @@
 \newcommand{\algo}[1]{\mathsf{#1}}
 \newcommand{\adv}{\mathcal{A}}
 \newcommand{\advv}{\mathcal{A}'}
-\DeclareMathOperator{\negl}{negl}
+\DeclareMathOperator{\negl}{\algo{negl}}
 % Private key
 \newcommand{\priv}{\Pi}
 \newcommand{\gen}{\algo{Gen}}
@@ -74,6 +75,9 @@ Let $G$ be any pseudorandom generator with expansion factor $l(n) = 2n$.
 $F: \set{ 0, 1 }^n \times \set{ 0, 1 }^{2n} \to \set{ 0, 1 }^{2n} : (k, x) \mapsto G(k) \oplus x$ is not a pseudorandom function.
 \end{claim}
 \begin{proof}
+Define the distinguisher $D^{h(\cdot)}(\param^n)$
+which returns $1$ if $h(0^{2n}) \oplus h(1^{2n}) = 1^{2n}$,
+and returns $0$ otherwise.
 Let $\func_{2n}$ denote the set of all functions $f : \set{ 0, 1 }^{2n} \to \set{ 0, 1 }^{2n}$.
 Then
 \begin{align*}
@@ -84,10 +88,7 @@ Then
         &= \sum_{x \in \set{ 0, 1 }^{2n}} \frac{1}{2^{2n}} \cdot \frac{1}{2^{2n}}\\
         &= \frac{1}{2^{2n}}
 \end{align*}
-Now define the distinguisher $D^{h(\cdot)}(\param^n)$
-which returns $1$ if $h(0^{2n}) \oplus h(1^{2n}) = 1^{2n}$,
-and returns $0$ otherwise.
-Then we have
+and
 \begin{align*}
     \prob[D^{F_k(\cdot)}(1^n) = 1 : k \gets_u \set{ 0, 1 }^n]
         &= \prob[F_k(0^{2n}) \oplus F_k(1^{2n}) = 1^{2n} : k \gets_u \set{ 0, 1 }^n]\\
@@ -100,17 +101,102 @@ Hence,
         &= 1 - \frac{1}{2^{2n}}
 \end{align*}
 The final expression is clearly not negligible (it doesn't even go to $0$ as $n \to \infty$, let alone faster than any polynomial),
+and $D$ is clearly a $\ppt$ algorithm,
 so $F$ is not a pseudorandom function.
 \end{proof}
 
-\textbf{TODO}
-
 \section*{Problem 2}
 
-\textbf{TODO}
+\begin{enumerate}
+
+\item[(a)] This encryption scheme is not EAV-secure.
+In particular, since the pseudorandom generator $G$ is known to all,
+the adversary can always just use the random string $r$, which is included in the ciphertext,
+to compute $G(r)$ and recover the plaintext.
+Specifically, the adversary can use the following algorithm, which is always successful, for the $\expir{\eav}{\adv}{\Pi}$ experiment:
+\begin{algorithm}[H]
+\begin{algorithmic}
+\Procedure{Attack}{}
+    \State $m_0 \gets 0^{n+1}$, $m_1 \gets 1^{n+1}$ (or any two disctinct messages)
+    \State Send $m_0$, $m_1$
+    \State Receive $c \gets \langle r, c' \rangle$
+    \If{$G(r) \oplus c' = m_0$}
+        \State \Return 0
+    \ElsIf{$G(r) \oplus c' = m_1$}
+        \State \Return 1
+    \Else
+        \State \Return $\bot$
+    \EndIf
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+Hence, this encryption scheme \textbf{is not EAV-secure}.
+It follows that this scheme \textbf{is also not CPA-secure},
+since that is a stricly stronger measure of security.
+
+\item[(b)] This encryption scheme is EAV-secure.
+To see this, define $G': \set{ 0, 1 }^n \to \set{ 0, 1 }^n$ by $G'(k) = F_k(0^n)$.
+By Theorem 3.18 in the text, the encryption scheme $c := G(k) \oplus m$ is EAV-secure for any pseudorandom generator $G$,
+so we need only show that $G'$ is indeed a pseudorandom generator.
+Let $D'$ be an arbitrary $\ppt$ algorithm and define $D^{h(\cdot)}$ by
+\begin{equation*}
+    D^{h(\cdot)}(1^n) =
+    \begin{cases}
+        1, &\text{if }D'(h(0^n)) = 1\\
+        0, &\text{otherwise}
+    \end{cases}
+\end{equation*}
+Clearly $D$ is still $\ppt$.
+Since $F$ is a pseudorandom function,
+there is a negligible function $\negl$ such that
+\begin{align*}
+    \negl(n) 
+        &> |\prob[D^{F_k(\cdot)}(1^n) = 1 : k \gets_u \set{ 0, 1 }^n] - \prob[D^{f(\cdot)}(1^n) = 1 : f \gets_u \func_n]|\\
+        &= |\prob[D'(F_k(0^n)) = 1 : k \gets_u \set{ 0, 1 }^n] - \prob[D^{f(\cdot)}(1^n) = 1 : f \gets_u \func_n]|\\
+        &= |\prob[D'(G'(k)) = 1 : k \gets_u \set{ 0, 1 }^n] - \prob[D^{f(\cdot)}(1^n) = 1 : f \gets_u \func_n]|\\
+        &= |\prob[D'(G'(k)) = 1 : k \gets_u \set{ 0, 1 }^n] - \prob[D'(r) = 1 : r \gets_u \set{ 0, 1 }^n]|
+\end{align*}
+where the final equality follows from the fact that
+$\{r\}_{r \gets_u \set{0,1}^n}$ and $\{f(0^n)\}_{f \gets_u \func_n}$
+have identical distributions.
+Hence, $G'$ is a pseudorandom generator and this encryption scheme \textbf{is EAV-secure}.
+
+However, this scheme \textbf{is not CPA-secure}, since the encryption is deterministic once a key is selected.
+In particular, the following algorithm for the $\expir{\cpa}{\adv}{\Pi}$ experiment is always successful:
+\begin{algorithm}[H]
+\begin{algorithmic}
+\Procedure{Attack}{}
+    \State $m_0 \gets 0^{n+1}$, $m_1 \gets 1^{n+1}$ (or any two distinct messages)
+    \State Send $m_0$, $m_1$
+    \State Receive $c \gets \enc_k(m_b)$
+    \State Receive an oracle $h(\cdot)$ for $\enc_k(\cdot)$
+    \If{$h(m_0) = c$}
+        \State \Return 0
+    \ElsIf{$h(m_1) = c$}
+        \State \Return 1
+    \Else
+        \State \Return $\bot$
+    \EndIf
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\item[(c)] This encryption scheme \textbf{is CPA-secure (and therefore EAV-secure)}.
+Indeed, since $F$ is a pseudorandom function,
+the corresponding block-cipher in CTR mode is CPA-secure (Theorem 3.32 in the text).
+This encryption scheme is identical, except the message space has been restricted to messages with a length equal to exactly 2 block lengths,
+so it is CPA-secure as well.
+
+\end{enumerate}
 
 \section*{Problem 3}
 
-\textbf{TODO}
+Regardless of the length of the plaintext,
+we must pad it with something, otherwise it would be impossible to distinguish
+between, for example, a 1024-bit message ending in a \texttt{1}, and a 1023-bit message that was padded to 1024 bits with a \texttt{1}.
+Hence, we would pad the original 1024-bit message with a single \texttt{1} followed 127 \texttt{0}s to get a 1152-bit message,
+that is, a $1152 / 128 = 9$-block message.
+Since the cipher is in CBC mode, the encrypted ciphertext would have an extra block to pass the initialization vector.
+Hence, the total length of the ciphertext would be \textbf{10 blocks} $=$ \textbf{1280 bits}.
 
 \end{document}
