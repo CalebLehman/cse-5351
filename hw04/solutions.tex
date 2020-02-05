@@ -70,6 +70,16 @@ Caleb Lehman
 
 \section*{Problem 1}
 
+% NOTES
+% Let n be block size and choose m0 \neq m1, |m0| = |m1| = n.
+% Receive C = (IV, c) = (IV, F_k(IV \oplus m_b))
+% Compute m = (IV \oplus m_0) \oplus (IV + 1)
+% Ask oracle for encryption
+% Receive C' = (IV + 1, c')
+% Then c' = F_k((IV + 1) \oplus m) = F_k((IV + 1) \oplus ((IV + 1)
+% \oplus (IV \oplus m_0)) = F_k(IV \oplus m_0)
+% If c' = c, then return 0
+% Else, return 1
 \textbf{TODO}
 
 \section*{Problem 2}
@@ -77,6 +87,10 @@ Caleb Lehman
 \textbf{TODO}
 
 \section*{Problem 3}
+
+\textbf{TODO}
+
+\section*{Problem 4}
 
 \textbf{TODO}
 
