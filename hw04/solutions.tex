@@ -70,28 +70,210 @@ Caleb Lehman
 
 \section*{Problem 1}
 
-% NOTES
-% Let n be block size and choose m0 \neq m1, |m0| = |m1| = n.
-% Receive C = (IV, c) = (IV, F_k(IV \oplus m_b))
-% Compute m = (IV \oplus m_0) \oplus (IV + 1)
-% Ask oracle for encryption
-% Receive C' = (IV + 1, c')
-% Then c' = F_k((IV + 1) \oplus m) = F_k((IV + 1) \oplus ((IV + 1)
-% \oplus (IV \oplus m_0)) = F_k(IV \oplus m_0)
-% If c' = c, then return 0
-% Else, return 1
-\textbf{TODO}
+\begin{claim}
+Consider the encryption scheme defined as a variant of CBC-mode encryption,
+in which the sender increments the $IV$ by 1 each time a message is encrypted.
+Then the resulting scheme is not CPA-secure.
+\end{claim}
+\begin{proof}
+Let $n$ be the block size and suppose an attacker chooses two distinct messages $m_0 \neq m_1$.
+The attacker will receive the ciphertext $C = \langle IV, F_k(IV \oplus m_b) \rangle$,
+where $k$ is the randomly generated key and $b$ is the randomly generated bit.
+The attacker can then ask the oracle for the encryption of $m = (IV \oplus m_0) \oplus (IV + 1)$,
+which yields
+\begin{align*}
+    C'
+        &= \langle IV + 1, F_k((IV + 1) \oplus m) \rangle\\
+        &= \langle IV + 1, F_k((IV + 1) \oplus (IV \oplus m_0) \oplus (IV + 1)) \rangle\\
+        &= \langle IV + 1, F_k(IV \oplus m_0) \rangle
+\end{align*}
+By comparing with the value $F_k(IV \oplus m_b)$ obtained in the first encryption,
+the attacker can determine $b$.
+In particular, the following attack is always successful,
+so the encryption scheme is not CPA-secure:
+\begin{algorithm}[H]
+\begin{algorithmic}
+\Procedure{Attack}{}
+    \State $m_0 \gets 0^n$, $m_1 \gets m_0 \oplus 1^n$ (or any two distinct messages)
+    \State Send $m_0$, $m_1$
+    \State Receive $C \gets \langle IV, c \rangle$
+    \State Compute $m = (IV \oplus m_0) \oplus (IV + 1)$ and pass to oracle
+    \State Receive $C' \gets \langle IV + 1, c' \rangle$
+    \If{$c = c'$}
+        \State \Return 0
+    \Else
+        \State \Return 1
+    \EndIf
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+\end{proof}
 
 \section*{Problem 2}
 
-\textbf{TODO}
+Suppose we encrypt the message $m = \langle m_1, m_2, \ldots, m_t \rangle$
+and receive the ciphertext $c = \langle c_0, c_1, c_2, \ldots, c_t \rangle$,
+where $c_0 = IV$.
+Furthermore, suppose that there is a transmission error in $c_q$
+for some $0 \leq q \leq t$.
+We consider the effect on recovering the plaintext for several different modes of operation.
+
+\subsection*{CTR}
+
+Decryption of the $i$th plaintext block is performed by computing $m_i = c_i \oplus F_k(IV + i) = c_i \oplus F_k(c_0 + i)$.
+The only ciphertext blocks on which this depends are $c_0$ and $c_i$.
+As a result, there are two cases:
+\begin{equation*}
+\begin{cases}
+q = 0, &\text{all plaintext blocks will be recovered \textit{incorrectly}}\\
+0 < q \leq t, &\text{only }m_q\text{ will be recovered \textit{incorrectly}}
+\end{cases}
+\end{equation*}
+
+\subsection*{OFB}
+
+Decryption of the $i$th plaintext block is performed by computing $m_i = c_i \oplus F_k^i(IV) = c_i \oplus F_k^i(c_0)$,
+where $F_k^i$ denotes the application of $F_k$ $i$ times.
+The only ciphertext blocks on which this depends are $c_0$ and $c_i$.
+As a result, there are two cases:
+\begin{equation*}
+\begin{cases}
+q = 0, &\text{all plaintext blocks will be recovered \textit{incorrectly}}\\
+0 < q \leq t, &\text{only }m_q\text{ will be recovered \textit{incorrectly}}
+\end{cases}
+\end{equation*}
+
+\subsection*{CFB}
+
+Decryption of the $i$th plaintext block is performed by computing $m_i = c_i \oplus F_k(c_{i-1})$.
+The only ciphertext blocks on which this depends are $c_{i-1}$ and $c_i$.
+As a result, there are three cases:
+\begin{equation*}
+\begin{cases}
+q = 0, &\text{only }m_1\text{ will be recovered \textit{incorrectly}}\\
+0 < q < t, &\text{only }m_q\text{ and }m_{q+1}\text{ will be recovered \textit{incorrectly}}\\
+q = t, &\text{only }m_t\text{ will be recovered \textit{incorrectly}}
+\end{cases}
+\end{equation*}
+
+\subsection*{CBC}
+
+Decryption of the $i$th plaintext block is performed by computing $m_i = c_{i-1} \oplus F_k^{-1}(c_i)$.
+The only ciphertext blocks on which this depends are $c_{i-1}$ and $c_i$.
+As a result, there are three cases:
+\begin{equation*}
+\begin{cases}
+q = 0, &\text{only }m_1\text{ will be recovered \textit{incorrectly}}\\
+0 < q < t, &\text{only }m_q\text{ and }m_{q+1}\text{ will be recovered \textit{incorrectly}}\\
+q = t, &\text{only }m_t\text{ will be recovered \textit{incorrectly}}
+\end{cases}
+\end{equation*}
 
 \section*{Problem 3}
 
-\textbf{TODO}
+We assume that we know that $m_2$ is of the form $m_2 = x || y || z || w || \texttt{0x03}^3$,
+where we have determined $z$ and $w$, but do not know $x$ and $y$.
+Note that if we modify $c_1$ as
+\begin{align*}
+\Delta_i
+    &= \texttt{0x00} || i || (z \oplus \texttt{0x06}) || (w \oplus \texttt{0x06}) || (\texttt{0x03} \oplus \texttt{0x06})^3\\
+c_1'
+    &= c_1 \oplus \Delta_i
+\end{align*}
+we yield ciphertext which corresponds to
+\begin{align*}
+m_2'
+    &= c_1' \oplus F_k^{-1}(c_2)\\
+    &= \Delta_i \oplus m_2\\
+    &= x || (y \oplus i) || \texttt{0x06}^5
+\end{align*}
+By checking against the padding oracle,
+we can verify whether or not $y \oplus i = \texttt{0x06}$.
+In summary,
+to compute $y$, we can use the following algorithm, which returns the value of $y$:
+\begin{algorithm}[H]
+\begin{algorithmic}
+\Procedure{SolveY}{}
+    \For{$i \in \set{ 0, 1 }^8$}
+        \State Set $\Delta_i \gets \texttt{0x00} || i || (z \oplus \texttt{0x06}) || (w \oplus \texttt{0x06}) || (\texttt{0x03} \oplus \texttt{0x06})^3$
+        \State Compute $c_1' \gets c_1 \oplus \Delta_i$
+        \State Send $\langle IV, c_1', c_2 \rangle$ to the padding oracle
+        \If{The oracle reports \textbf{no} padding error}
+            \State \Return $y = i \oplus \texttt{0x06}$
+        \EndIf
+    \EndFor
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
 
 \section*{Problem 4}
 
-\textbf{TODO}
+Let $m = \langle m_1, \ldots, m_t \rangle$ be a message,
+$c = \langle c_0, c_1, \ldots, c_t \rangle = \langle IV, c_1, \ldots, c_t \rangle$ the corresponding ciphertext,
+produced with the CTR mode of operation.
+Assume we have the ciphertext and a padding oracle and wish to determine the plaintext.
+Let $n$ be the block length and note that if we pass the modified $c_t' = c_t \oplus \Delta$,
+$\Delta \in \set{ 0, 1 }^n$ to the padding oracle,
+it will ``see'' the final block of the message as $(c_t \oplus \Delta) \oplus F_k(IV + t) = (c_t \oplus F_k(IV + t)) \oplus \Delta = m_t \oplus \Delta$.
+With this ability, we can compute all of $m$.
+In particular, \textbf{we can follow the same approach as in the slides with the change that,
+\textit{instead} of modifying the penultimate ciphertext block ($c_1$ in the slides)
+to ``present'' a modified version of the final plaintext block ($m_2$ in the slides) to the padding oracle,
+we would now make the modifications to the final ciphertext clock ($c_2$ in the slides)}.
+The details are outlined in the following sections.
+
+\pagebreak
+
+\subsection*{Determining padding length}
+
+First, we will determine the padding length, $b$.
+To do this, we choose the appropriate $\Delta$ to modify bytes in $c_t$ from left to right until a padding error is returned by the oracle,
+in a similar to manner as we did for CBC mode.
+The following algorithm returns the padding length
+(the only real change from the slides is to modify the final block of ciphertext instead of the penultimate block):
+\begin{algorithm}[H]
+\begin{algorithmic}
+\Procedure{SolvePadding}{}
+    \For{$i \in \set{ 1, \ldots, n }$}
+        \State Set $\Delta_i \gets \texttt{0x01}^i || \texttt{0x00}^{n - i}$
+        \State Compute $c_t' \gets c_t \oplus \Delta_i$ (alter the first $i$ bytes of $c_t$)
+        \State Send $\langle c_0, c_1, \ldots, c_t' \rangle$ to the padding oracle
+        \If{The oracle reports a padding error}
+            \State \Return $b = n - (i - 1)$
+        \EndIf
+    \EndFor
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection*{Determining bytes of plaintext}
+
+We can know determine the bytes of the plaintext,
+in order,
+starting from the rightmost non-padding byte.
+For the sake of concreteness,
+we will use the example on the slides and assume our plaintext/ciphertext pair is
+$m = \langle m_1, m_2 \rangle$,
+$c = \langle IV, c_1, c_2 \rangle$,
+where $m_2 = x || y || z || w || \texttt{0x03}^3$
+(we determined $b = 3$ in the step above).
+We can try different $\Delta$ until the modified $m_2'$ ``seen'' by the padding oracle is appropriately padded for padding length 4,
+in a similar manner as we did for CBC mode.
+The following algorithm returns $w$
+(the only real change from the slides is to modify $c_2$ instead of $c_1$)\footnote{the algorithm is then easily repeated to return $z$, and then $y$, etc.}:
+\begin{algorithm}[H]
+\begin{algorithmic}
+\Procedure{SolveW}{}
+    \For{$i \in \set{ 0, 1 }^8$}
+        \State Set $\Delta_i \gets \texttt{0x00}^3 || i || (\texttt{0x03} \oplus \texttt{0x04})^3$
+        \State Compute $c_2' \gets c_2 \oplus \Delta_i$
+        \State Send $\langle IV, c_1', c_2 \rangle$ to the padding oracle
+        \If{The oracle reports \textbf{no} padding error}
+            \State \Return $w = i \oplus \texttt{0x04}$
+        \EndIf
+    \EndFor
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
 
 \end{document}
