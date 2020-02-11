@@ -73,7 +73,7 @@ Caleb Lehman
 \begin{claim}
 Consider the encryption scheme defined as a variant of CBC-mode encryption,
 in which the sender increments the $IV$ by 1 each time a message is encrypted.
-Then the resulting scheme is not CPA-secure.
+The resulting scheme is not CPA-secure.
 \end{claim}
 \begin{proof}
 Let $n$ be the block size and suppose an attacker chooses two distinct messages $m_0 \neq m_1$.
@@ -94,7 +94,7 @@ so the encryption scheme is not CPA-secure:
 \begin{algorithm}[H]
 \begin{algorithmic}
 \Procedure{Attack}{}
-    \State $m_0 \gets 0^n$, $m_1 \gets m_0 \oplus 1^n$ (or any two distinct messages)
+    \State $m_0 \gets 0^n$, $m_1 \gets 1^n$ (or any two distinct messages)
     \State Send $m_0$, $m_1$
     \State Receive $C \gets \langle IV, c \rangle$
     \State Compute $m = (IV \oplus m_0) \oplus (IV + 1)$ and pass to oracle
@@ -217,9 +217,9 @@ $\Delta \in \set{ 0, 1 }^n$ to the padding oracle,
 it will ``see'' the final block of the message as $(c_t \oplus \Delta) \oplus F_k(IV + t) = (c_t \oplus F_k(IV + t)) \oplus \Delta = m_t \oplus \Delta$.
 With this ability, we can compute all of $m$.
 In particular, \textbf{we can follow the same approach as in the slides with the change that,
-\textit{instead} of modifying the penultimate ciphertext block ($c_1$ in the slides)
+instead of modifying the \emph{penultimate} ciphertext block ($c_1$ in the slides)
 to ``present'' a modified version of the final plaintext block ($m_2$ in the slides) to the padding oracle,
-we would now make the modifications to the final ciphertext clock ($c_2$ in the slides)}.
+we would now make the modifications to the \emph{final} ciphertext clock ($c_2$ in the slides)}.
 The details are outlined in the following sections.
 
 \pagebreak
