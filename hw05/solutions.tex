@@ -47,8 +47,10 @@
 \newcommand{\gen}{\algo{Gen}}
 \newcommand{\enc}{\algo{Enc}}
 \newcommand{\dec}{\algo{Dec}}
+\newcommand{\mac}{\algo{Mac}}
 \newcommand{\param}{1}
-\newcommand{\expir}[3]{\algo{PrivK}^{#1}_{{#2},{#3}}}
+\newcommand{\privexpir}[3]{\algo{PrivK}^{#1}_{{#2},{#3}}}
+\newcommand{\macexpir}[2]{\algo{MACForge}_{{#1},{#2}}}
 \newcommand{\eav}{\algo{eav}}
 \newcommand{\cpa}{\algo{cpa}}
 %%%
@@ -69,6 +71,30 @@ Caleb Lehman
 \maketitle
 
 \section*{Problem 1}
+
+\begin{claim}
+Modify basic \texttt{CBC-MAC} as follows:
+For key $k \in \set{ 0, 1 }^n$ and message $m \in \set{ 0, 1 }^{nq}$,
+\begin{itemize}
+    \item parse $m$ as $m = (m_1, \ldots, m_q)$
+    \item let $t_0 \gets_u \set{ 0, 1 }^n$,
+    $t_i = F_k(m_i \oplus t_{i-1})$ for $1 \leq i \leq q$
+    \item output $\langle t_0, t_q \rangle$ as the tag
+\end{itemize}
+Then this modified fixed-length \texttt{MAC} scheme is \textbf{not} secure.
+\end{claim}
+\begin{proof}
+Call the modified encryption scheme $\Pi$
+and suppose we only have access to an oracle $\mac_k(\cdot)$.
+We can get the valid pair $(m_0, \langle t_0, t \rangle) = \mac_k(m_0)$ for the message $m_0 = 0^n$,
+where $t = F_k(m_0 \oplus t_0) = F_k(t_0)$ by the definition of \texttt{CBC} mode.
+Then for any $m \in \set{ 0, 1 }^n$, we have
+$F_k((t_0 \oplus m) \oplus m) = F_k(t_0) = t$,
+so the pair $(m, \langle t_0 \oplus m, t \rangle)$ is valid.
+By choosing $m \neq 0^n$, this process easily defines an adversary, $\adv$,
+that always wins experiment $\macexpir{\adv}{\Pi}(\cdot)$.
+It follows that $\Pi$ is not secure.
+\end{proof}
 
 \textbf{TO-DO}
 
