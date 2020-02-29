@@ -114,12 +114,29 @@ For key $k \in \set{ 0, 1 }^n$ and message $m \in \set{ 0, 1 }^{2n}$,
 Then this fixed-length $\mac$ scheme is \textbf{not} secure against chosen-message attacks.
 \end{claim}
 \begin{proof}
-Suppose that $m = m_1 \| m_2$, $t = t_1 \| t_2 = \mac_k(m)$,
-where $|m_1| = |m_2|$ and $|t_1| = |t_2|$.
-Note that $t_1$ depends only on $m_1$ and $t_2$ depends only on $m_2$.
+Note that the first half of the tag depends only on the first half of
+the message and the second half of the tag depends only on the second
+half of the message.
+In particular, by querying the $\mac$ oracle on the messages
+$m = m_1 \| m_2$ and $n = n_1 \| n_2$,
+we get the tags
+$t^m = t^m_1 \| t^m_2 = F_k(m_1) \| F_k(F_k(m_2))$ and $t^n = t^n_1 \| t^n_2 = F_k(n_1) \| F_k(F_k(n_2))$
+which we can mix to make the valid pair
+$\langle m_1 \| n_2, t^m_1 \| t^n_2 \rangle$.
 This observation allows us to develop the following adversary:
+\begin{algorithm}[H]
+\begin{algorithmic}
+\Procedure{Adversary}{}
+    \State Send $m_0 = 0^n \| 0^n$ to the $\mac$ oracle
+    \State Receive tag and set $t_0 \gets$ the \textit{first} half of the bits of the tag
+    \State Send $m_1 = 1^n \| 1^n$ to the $\mac$ oracle
+    \State Receive tag and set $t_1 \gets$ the \textit{second} half of the bits of the tag
+    \State \Return $(0^n \| 1^n, t_0 \| t_1)$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+This adversary always wins the experiment $\macexpir{\adv}{\Pi}(\cdot)$,
+so this scheme is not secure.
 \end{proof}
-
-\textbf{TO-DO}
 
 \end{document}
