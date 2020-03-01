@@ -92,15 +92,69 @@ where $t = F_k(m_0 \oplus t_0) = F_k(t_0)$ by the definition of $\algo{CBC}$ mod
 Then for any $m \in \set{ 0, 1 }^n$, we have
 $F_k((t_0 \oplus m) \oplus m) = F_k(t_0) = t$,
 so the pair $(m, \langle t_0 \oplus m, t \rangle)$ is valid.
-By choosing $m \neq 0^n$, this process easily defines an adversary, $\adv$,
-that always wins experiment $\macexpir{\adv}{\Pi}(\cdot)$.
+We can use this attack to develop an adversary:
+\begin{algorithm}[H]
+\begin{algorithmic}
+\Procedure{Adversary}{}
+    \State Send the message $0^n$ to the $\mac$ oracle
+    \State Receive the tag $\langle t_0, t \rangle$
+    \State \Return $(1^n, \langle 1^n \oplus t_0, t \rangle)$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+Since $1^n$ was not the message we sent to the oracle,
+this adversary always wins the experiment $\macexpir{\adv}{\Pi}(\cdot)$.
 It follows that $\Pi$ is not secure.
 \end{proof}
 
+\newpage
 \section*{Problem 2}
 
-\textbf{TO-DO}
+\begin{claim}
+Consider the following modification of the basic fixed-length $\algo{CBC}\mhyphen \algo{MAC}$:
+Given a message $m = (m_1, \ldots, m_q)$,
+append $|m|$ (the $n$-bit representation of the length)
+and then apply basic fixed-length $\algo{CBC}\mhyphen \algo{MAC}$.
+Then this modified $\mac$ scheme is \textbf{not} secure for arbitrary-length messages.
+\end{claim}
+\begin{proof}
+Let $l_1$, $l_3$ denote the $n$-bit representations of 1 and 3, that is,
+the lengths of single-block and a three-block messages, respectively.
+Send $0^n$, $1^n$ to the oracle and let
+$t_1 = \algo{basic}\mhyphen \algo{CBC}\mhyphen \algo{MAC}_k(0^n \| l_1)$,
+$t_2 = \algo{basic}\mhyphen \algo{CBC}\mhyphen \algo{MAC}_k(1^n \| l_1)$
+be the tags it returns.
+Then send $0^n \| l_1 \| 0^n$ to the oracle and let
+$t_3 = \algo{basic}\mhyphen \algo{CBC}\mhyphen \algo{MAC}_k(0^n \| l_1 \| 0^n \| l_3)$
+be the tag it returns.
+Note that
+\begin{align*}
+    \algo{basic}\mhyphen \algo{CBC}\mhyphen \algo{MAC}_k(1^n \| l_1 \| (t_1 \oplus t_2) \| l_3)
+        &= F_k(l_3 \oplus F_k((t_1 \oplus t_2) \oplus F_k(l_1 \oplus F_k(1^n))))\\
+        &= F_k(l_3 \oplus F_k((t_1 \oplus t_2) \oplus \algo{basic}\mhyphen \algo{CBC}\mhyphen \algo{MAC}_k(1^n \| l_1)))\\
+        &= F_k(l_3 \oplus F_k((t_1 \oplus t_2) \oplus t_2))\\
+        &= F_k(l_3 \oplus F_k(0^n \oplus t_1))\\
+        &= F_k(l_3 \oplus F_k(0^n \oplus \algo{basic}\mhyphen \algo{CBC}\mhyphen \algo{MAC}_k(0^n \| l_1)))\\
+        &= F_k(l_3 \oplus F_k(0^n \oplus F_k(l_1 \oplus F_k(0^n))))\\
+        &= t_3
+\end{align*}
+so $(1^n \| l_1 \| (t_1 \oplus t_2), t_3)$ is a valid pair as well.
+Since $1^n \| l_1 \| (t_1 \oplus t_2)$ is not one of the messages we passed to the oracle,
+we can use this exploit to design the following adversary:
+\begin{algorithm}[H]
+\begin{algorithmic}
+\Procedure{Adversary}{}
+    \State Send the messages $0^n$, $1^n$, and $0^n \| l_1 \| 0^n$ to the $\mac$ oracle
+    \State Receive the appropriate tags $t_1$, $t_2$, and $t_3$ from the oracle
+    \State \Return $(1^n \| l_1 \| (t_1 \oplus t_2), t_3)$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+This adversary always wins the experiment $\macexpir{\adv}{\Pi}(\cdot)$,
+so this scheme is not secure for arbitrary-length messages.
+\end{proof}
 
+\newpage
 \section*{Problem 3}
 
 \begin{claim}
@@ -120,9 +174,9 @@ half of the message.
 In particular, by querying the $\mac$ oracle on the messages
 $m = m_1 \| m_2$ and $n = n_1 \| n_2$,
 we get the tags
-$t^m = t^m_1 \| t^m_2 = F_k(m_1) \| F_k(F_k(m_2))$ and $t^n = t^n_1 \| t^n_2 = F_k(n_1) \| F_k(F_k(n_2))$
+$t^m = t^m_1 \| t^m_2 = F_k(m_1) \| F_k(F_k(m_2))$ and $t^n = t^n_1 \| t^n_2 = F_k(n_1) \| F_k(F_k(n_2))$,
 which we can mix to make the valid pair
-$\langle m_1 \| n_2, t^m_1 \| t^n_2 \rangle$.
+$(m_1 \| n_2, t^m_1 \| t^n_2)$.
 This observation allows us to develop the following adversary:
 \begin{algorithm}[H]
 \begin{algorithmic}
@@ -135,8 +189,9 @@ This observation allows us to develop the following adversary:
 \EndProcedure
 \end{algorithmic}
 \end{algorithm}
-This adversary always wins the experiment $\macexpir{\adv}{\Pi}(\cdot)$,
-so this scheme is not secure.
+The message $0^n \| 1^n$ is not one of the two messages the adversary sends to the oracle,
+so this adversary always wins the experiment $\macexpir{\adv}{\Pi}(\cdot)$.
+Hence, this scheme is not secure.
 \end{proof}
 
 \end{document}
