@@ -29,6 +29,7 @@
 %% Probability commands
 \DeclareMathOperator*{\prob}{Pr}
 \newcommand{\given}{\mid}
+\DeclareMathOperator*{\lcm}{lcm}
 
 %% Crypto commands
 \newcommand{\ppt}{\algo{PPT}}
@@ -71,28 +72,178 @@ Caleb Lehman
 
 \maketitle
 
+\textbf{Note:} Throughout these solutions, when we write $\bmod n$ at the end of a string of equalities,
+it applies to each equality in the string.
+
 \section*{Problem 1}
 
-\textbf{TO-DO}
+\begin{align*}
+    \phi(2400)
+        &= \phi(2^5 \cdot 3 \cdot 5^2) \\
+        &= \phi(2^5) \cdot \phi(3) \cdot \phi(5^2) \\
+        &= 2^{5-1} \cdot (2 - 1) \cdot (3 - 1) \cdot 5^{2-1} \cdot (5 - 1) \\
+        &= 16 \cdot 2 \cdot 5 \cdot 4 \\
+        &= 640
+\end{align*}
 
 \section*{Problem 2}
 
-\textbf{TO-DO}
+First note that $\phi(21) = \phi(3 \cdot 7) = \phi(3) \cdot \phi(7) = 2 \cdot 6 = 12$
+and $123622448602 = 12 \cdot 1030204050 + 2 = 2 \mod 12$.
+Then by Euler's theorem, since $\gcd(19, 21) = 1$, we have
+\begin{align*}
+    19^{12362448602}
+        &= 19^{12362448602 \bmod 12} \\
+        &= 19^2 \\
+        &= (-2)^2 \\
+        &= 4 \bmod 21
+\end{align*}
 
+\newpage
 \section*{Problem 3}
 
-\textbf{TO-DO}
+We have
+\begin{gather*}
+    2^1 = 2 \mod 3\\
+    2^2 = 1 \mod 3
+\end{gather*}
+so the order of $2$ in $\mathbb{Z}^*_{3}$ is 2.
+We have
+\begin{gather*}
+    2^1 = 2 \mod 7\\
+    2^2 = 4 \mod 7\\
+    2^3 = 1 \mod 7
+\end{gather*}
+so the order of $2$ in $\mathbb{Z}^*_{7}$ is 3.
+$21 = 3 \cdot 7$ is the prime factorization of $21$,
+so the order of $2$ in $\mathbb{Z}^*_{21}$ is $\lcm(2, 3) = 6$.
+Indeed, we can verify this explicitly as follows:
+\begin{gather*}
+    2^1 = 2 \mod 21\\
+    2^2 = 4 \mod 21\\
+    2^3 = 8 \mod 21\\
+    2^4 = 16 \mod 21\\
+    2^5 = 11 \mod 21\\
+    2^6 = 1 \mod 21
+\end{gather*}
 
 \section*{Problem 4}
 
-\textbf{TO-DO}
+We note that $3599 = 3600 - 1 = 60^2 - 1 = (60+1)(60-1) = 61 \cdot 59$.
+Since $61$ and $59$ are prime,
+we have that $\phi(3599) = \phi(61) \cdot \phi(59) = 60 \cdot 58 = 3480$
+and we want to compute $d$ such that $31 \cdot d = 1 \bmod 3480$.
+We can compute B\'ezout coefficients, starting with the guess that $31 \cdot 2 \cdot 58 \approx 60 \cdot 58$:
+\begin{align*}
+    31 \cdot 2 \cdot 58 - 60 \cdot 58
+        &= 1 \cdot 2 \cdot 58\\
+        &= 116\\
+    31 \cdot 4 - 116
+        &= 8\\
+    8 \cdot 4 - 31
+        &= 1
+\end{align*}
+Substituting each equations where appropriate, we have
+\begin{align*}
+    1
+        &= 8 \cdot 4 - 31\\
+        &= (31 \cdot 4 - 116) \cdot 4 - 31\\
+        &= (31 \cdot 4 - (31 \cdot 2 \cdot 58 - 3480)) \cdot 4 - 31\\
+        &= 31 \cdot ((4 - 116) \cdot 4 - 1) + 3480 \cdot 4\\
+        &= 31 \cdot (-449) + 3480 \cdot 4
+\end{align*}
+
+It follows that $31 \cdot 3031 = 31 \cdot (-449) = 1 - 3480 \cdot 4 = 1 \bmod 3480$.
+That is, the private key of the user is $d=3031$, $N=3599$.
+
 
 \section*{Problem 5}
 
-\textbf{TO-DO}
+We note that $155 = 5 \cdot 31$.
+Since $5$ and $31$ are prime,
+we have that $\phi(155) = \phi(5) \cdot \phi(31) = 4 \cdot 30 = 120$,
+and we want to compute $d$ such that $7 \cdot d = 1 \bmod 120$.
+Note that
+\begin{gather*}
+    7 \cdot 17 = 119 = -1 \bmod 120,
+\end{gather*}
+so $7 \cdot (7 \cdot 17^2) = (7 \cdot 17)^2 = (-1)^2 = 1 \bmod 120$.
+We have
+\begin{align*}
+    7 \cdot 17 \cdot 17
+        &= 7 \cdot 289\\
+        &= 7 \cdot 49\\
+        &= 343\\
+        &= 103 \mod 120
+\end{align*}
+Hence, the private key is $d = 103$, so we need only compute $c^{103} = 61^{103} \mod 155$.
+Note that $61 \cdot 61 = 60^2 + 2 \cdot 60 + 1 = 30 \cdot 120 + 120 + 1 = 1 \bmod 120$.
+It follows that $61^{103} = 61^{103 \bmod 2} = 61 \bmod 120$.
+That is, the original plaintext is $m = 61$.
 
 \section*{Problem 6}
 
-\textbf{TO-DO}
+Fix $N, e$ and suppose we have an adversary $\adv$ running in time $t$ that takes ciphertext as input and satisfies
+\begin{gather*}
+    \prob[\adv(x^e) = x \bmod N : x \gets_u \mathbb{Z}^*_N] = 0.01
+\end{gather*}
+Define the following adversary $\advv$ by the following procedure:
+\begin{algorithm}[H]
+\begin{algorithmic}[1]
+\Procedure{$\advv$}{c}
+    \State $i \gets 1$
+    \While{$i \leq 500$}
+        \State $r \gets_u \mathbb{Z}^*_N$\label{alg:sample}
+        \State $c' \gets c \cdot r^e \bmod N$\label{alg:uniform}
+        \State $x' \gets \adv(c')$\label{alg:subroutine}
+        \If{$(x')^e = c' \bmod N$}\label{alg:verify}
+            \State \Return $x' \cdot r^{-1} \bmod N$\label{alg:inverse}
+        \EndIf
+        \State $i \gets i+1$\label{alg:update}
+    \EndWhile
+    \State \Return $\bot$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+We first comment on the runtime of $\advv$.
+Note that the multiplication on line (\ref{alg:uniform}),
+the exponentiation on line (\ref{alg:verify}),
+and the inverse computation on line (\ref{alg:inverse})
+each run in $\mathcal{O}(\|N\|^3)$.
+Line (\ref{alg:subroutine}) runs in time $t$,
+so each iteration of the loop has runtime $\mathcal{O}(t + 3 \cdot \|N\|^3)$
+and the whole procedure has runtime $\mathcal{O}(100 (t + 3 \cdot \|N\|^3)) = \mathcal{O}(t + \|N\|^3)$.
+In particular, the runtime of $\advv$ is polynomial in $t$ and $\| N \|$.
+
+We now compute the probability of success of $\advv$.
+First, let $c = x^e$ and consider a single iteration of the while loop (lines (\ref{alg:sample})-(\ref{alg:update})).
+Then $c' = c \cdot r^e = x^e \cdot r^e = (x \cdot r)^e \bmod N$.
+Since multiplication by $x$ is a bijection on $\mathbb{Z}^*_N$ (with inverse given by multiplication by $x^{-1}$),
+the samples $(x \cdot r)_{r \gets_u \mathbb{Z}^*_N}$ are uniformly distributed in $\mathbb{Z}^*_N$.
+In particular,
+\begin{align*}
+    \prob[\adv(c') = x \cdot r \bmod N : r \gets_u \mathbb{Z}^*_N]
+        &= \prob[\adv((x \cdot r)^e) = x \cdot r \bmod N : r \gets_u \mathbb{Z}^*_N]\\
+        &= \prob[\adv(y^e) = y \bmod N : y \gets_u \mathbb{Z}^*_N]\\
+        &= 0.01
+\end{align*}
+Furthermore, if $x' \gets \adv(c') = x \cdot r$, then $(x')^e = (x \cdot r)^e = c'$ is true
+and $x' \cdot r^{-1} = x \cdot r \cdot r^{-1} = x \bmod N$, so the whole procedure returns the correct plaintext.
+In other words, $\prob[\text{iteration }i\text{ succeeds}] = 0.01$.
+Each loop is independent, so we have
+\begin{align*}
+    \prob[\advv(x^e) = x : x \gets_u \mathbb{Z}^*_N]
+        &= 1 - \prob[\text{iteration }i\text{ fails for all }i]\\
+        &= 1 - \Pi_{i = 1}^{500} \prob[\text{iteration }i\text{ fails}]\\
+        &= 1 - \Pi_{i = 1}^{500} (1 - \prob[\text{iteration }i\text{ succeeds}])\\
+        &= 1 - \Pi_{i = 1}^{500} 0.99\\
+        &= 1 - 0.99^500\\
+        &\geq 0.99
+\end{align*}
+
+To summarize, given ciphertext $c = x^e \bmod N$, the adversary $\advv(c)$ given by the procedure above
+has runtime polynomial in $t$ and $\|N\|$
+and produces $x$ with probability $\geq 0.99$.
 
 \end{document}
