@@ -185,7 +185,7 @@ That is, the original plaintext is $m = 61$.
 
 Fix $N, e$ and suppose we have an adversary $\adv$ running in time $t$ that takes ciphertext as input and satisfies
 \begin{gather*}
-    \prob[\adv(x^e) = x \bmod N : x \gets_u \mathbb{Z}^*_N] = 0.01
+    \prob[\adv(x^e \bmod N) = x \bmod N : x \gets_u \mathbb{Z}^*_N] = 0.01
 \end{gather*}
 Define the following adversary $\advv$ by the following procedure:
 \begin{algorithm}[H]
@@ -224,11 +224,11 @@ the samples $(x \cdot r)_{r \gets_u \mathbb{Z}^*_N}$ are uniformly distributed i
 In particular,
 \begin{align*}
     \prob[\adv(c') = x \cdot r \bmod N : r \gets_u \mathbb{Z}^*_N]
-        &= \prob[\adv((x \cdot r)^e) = x \cdot r \bmod N : r \gets_u \mathbb{Z}^*_N]\\
+        &= \prob[\adv((x \cdot r)^e \bmod N) = x \cdot r \bmod N : r \gets_u \mathbb{Z}^*_N]\\
         &= \prob[\adv(y^e) = y \bmod N : y \gets_u \mathbb{Z}^*_N]\\
         &= 0.01
 \end{align*}
-Furthermore, if $x' \gets \adv(c') = x \cdot r$, then $(x')^e = (x \cdot r)^e = c'$ is true
+Furthermore, if $x' \gets \adv(c') = x \cdot r \bmod N$, then $(x')^e = (x \cdot r)^e = c' \bmod N$ is true
 and $x' \cdot r^{-1} = x \cdot r \cdot r^{-1} = x \bmod N$, so the whole procedure returns the correct plaintext.
 In other words, $\prob[\text{iteration }i\text{ succeeds}] = 0.01$.
 Each loop is independent, so we have
